@@ -44,11 +44,27 @@ class GazeTracker:
         left_eye = landmarks[468]  # приближенная точка левого глаза
         right_eye = landmarks[473]  # приближенная точка правого глаза
 
-        # Центр лица: нос + подбородок
-        nose_tip = landmarks[1]
-        chin = landmarks[175]
-        face_center_x = (nose_tip.x + chin.x) / 2
-        face_center_y = (nose_tip.y + chin.y) / 2
+        # Центр лица: используем более стабильные точки
+        # Среднее между центрами глаз как более надежный индикатор центра лица
+        left_eye_inner = landmarks[468]  # внутренняя точка левого глаза
+        right_eye_inner = landmarks[473]  # внутренняя точка правого глаза
+        
+        # Дополнительно используем точку между глазами и носом для более точного центра
+        nose_bridge = landmarks[6]  # переносица
+        
+        # Более точный центр лица: усреднение между глазами и переносицей
+        # Это дает более центральное положение на лице, чем среднее между носом и подбородком
+        face_center_x = (left_eye_inner.x + right_eye_inner.x + nose_bridge.x) / 3
+        face_center_y = (left_eye_inner.y + right_eye_inner.y + nose_bridge.y) / 3
+        
+        # Также можем использовать дополнительные точки для улучшения точности
+        # Средняя точка между глазами (медиана глаз)
+        eyes_center_x = (left_eye_inner.x + right_eye_inner.x) / 2
+        eyes_center_y = (left_eye_inner.y + right_eye_inner.y) / 2
+        
+        # Используем взвешенное среднее для более точного центра лица
+        face_center_x = 0.4 * eyes_center_x + 0.6 * nose_bridge.x
+        face_center_y = 0.4 * eyes_center_y + 0.6 * nose_bridge.y
 
         # Относительное положение глаз от центра лица
         left_gx = left_eye.x - face_center_x

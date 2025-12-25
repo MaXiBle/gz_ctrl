@@ -64,12 +64,15 @@ class TestGazeTracker(unittest.TestCase):
         mock_landmarks[175] = Mock()  # chin
         mock_landmarks[175].x = 0.5
         mock_landmarks[175].y = 0.7
-        mock_landmarks[468] = Mock()  # left eye
+        mock_landmarks[468] = Mock()  # left eye (now used as left eye inner)
         mock_landmarks[468].x = 0.45
         mock_landmarks[468].y = 0.45
-        mock_landmarks[473] = Mock()  # right eye
+        mock_landmarks[473] = Mock()  # right eye (now used as right eye inner)
         mock_landmarks[473].x = 0.55
         mock_landmarks[473].y = 0.45
+        mock_landmarks[6] = Mock()  # nose bridge
+        mock_landmarks[6].x = 0.5
+        mock_landmarks[6].y = 0.4
         
         # Создаем mock для результатов детекции
         mock_results = Mock()
