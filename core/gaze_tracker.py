@@ -3,14 +3,16 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+from config.settings import FACE_DETECTION_CONFIDENCE, FACE_TRACKING_CONFIDENCE, GAZE_OFFSET_MAX
 
 class GazeTracker:
     def __init__(self):
+        self.gaze_offset_max = GAZE_OFFSET_MAX
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(
             max_num_faces=1,
             refine_landmarks=True,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
+            min_detection_confidence=FACE_DETECTION_CONFIDENCE,
+            min_tracking_confidence=FACE_TRACKING_CONFIDENCE
         )
 
     def get_gaze_point(self, frame):
@@ -42,7 +44,7 @@ class GazeTracker:
         rel_gy = (left_gy + right_gy) / 2
 
         # Нормализация в [0, 1] (эмпирический диапазон)
-        max_offset = 0.06  # подобрано экспериментально
+        max_offset = self.gaze_offset_max
 
         normalized_gx = 0.5 + rel_gx / (2 * max_offset)
         normalized_gy = 0.5 + rel_gy / (2 * max_offset)

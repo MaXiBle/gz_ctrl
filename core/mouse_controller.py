@@ -3,9 +3,10 @@ import time
 
 import pyautogui
 import numpy as np
+from config.settings import DWELL_TIME, SMOOTHING_WINDOW
 
 class MouseController:
-    def __init__(self, dwell_time=1.0, smoothing_window=5):
+    def __init__(self, dwell_time=DWELL_TIME, smoothing_window=SMOOTHING_WINDOW):
         self.dwell_time = dwell_time
         self.last_gaze_x = None
         self.last_gaze_y = None

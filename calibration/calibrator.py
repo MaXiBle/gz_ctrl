@@ -6,7 +6,7 @@ import numpy as np
 from utils.camera import Camera
 from core.gaze_tracker import GazeTracker
 from utils.screen import get_screen_size, generate_calibration_points
-from config.settings import CALIBRATION_GRID
+from config.settings import CALIBRATION_GRID, CAMERA_DEVICE_ID
 
 class Calibrator:
     def __init__(self):
@@ -16,7 +16,7 @@ class Calibrator:
             cols=CALIBRATION_GRID[0],
             rows=CALIBRATION_GRID[1]
         )
-        self.camera = Camera()
+        self.camera = Camera(device_id=CAMERA_DEVICE_ID)
         self.gaze_tracker = GazeTracker()
         self.gaze_samples = []
         self.screen_points = []

@@ -1,7 +1,7 @@
 # main.py
 
 import cv2
-from config.settings import DWELL_TIME
+from config.settings import DWELL_TIME, CAMERA_DEVICE_ID
 from core.gaze_tracker import GazeTracker
 from core.mouse_controller import MouseController
 from core.screen_mapper import ScreenMapper
@@ -21,7 +21,7 @@ def main():
         calibrator.start()
         mapper.load_calibration()
 
-    camera = Camera()
+    camera = Camera(device_id=CAMERA_DEVICE_ID)
     gaze_tracker = GazeTracker()
     mouse_controller = MouseController(dwell_time=DWELL_TIME)
 
