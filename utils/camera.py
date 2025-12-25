@@ -1,10 +1,12 @@
 import cv2
 
 class Camera:
-    def __init__(self, device_id=0):
-        self.cap = cv2.VideoCapture(device_id)
+    def __init__(self, device_id=None):
+        # Используем значение по умолчанию 0, если device_id не указан
+        self.device_id = device_id or 0
+        self.cap = cv2.VideoCapture(self.device_id)
         if not self.cap.isOpened():
-            raise RuntimeError("Не удалось открыть камеру.")
+            raise RuntimeError(f"Не удалось открыть камеру с ID {self.device_id}.")
 
     def get_frame(self):
         ret, frame = self.cap.read()
