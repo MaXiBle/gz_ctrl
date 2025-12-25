@@ -20,7 +20,7 @@ class GazeTracker:
             output_facial_transformation_matrixes=True,
             num_faces=1,
             min_face_detection_confidence=FACE_DETECTION_CONFIDENCE,
-            min_face_landmarking_confidence=FACE_TRACKING_CONFIDENCE
+            min_tracking_confidence=FACE_TRACKING_CONFIDENCE
         )
         self.face_landmarker = mp.tasks.vision.FaceLandmarker.create_from_options(options)
 
