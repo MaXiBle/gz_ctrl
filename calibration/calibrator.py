@@ -40,8 +40,9 @@ class Calibrator:
                 if img is None:
                     continue
 
-                gaze = self.gaze_tracker.get_gaze_point(img)
-                if gaze:
+                gaze_result = self.gaze_tracker.get_gaze_point(img)
+                if gaze_result and gaze_result[0] is not None:
+                    gaze, face_center = gaze_result
                     gx, gy = gaze
                     # === ВРЕМЕННО: ослабленный фильтр для отладки ===
                     if 0.0 <= gx <= 1.0 and 0.0 <= gy <= 1.0:
