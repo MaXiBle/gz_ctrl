@@ -3,11 +3,12 @@
 import cv2
 import mediapipe as mp
 import numpy as np
-from config.settings import FACE_DETECTION_CONFIDENCE, FACE_TRACKING_CONFIDENCE, GAZE_OFFSET_MAX
+from config.settings import FACE_DETECTION_CONFIDENCE, FACE_TRACKING_CONFIDENCE, GAZE_OFFSET_MAX, HEAD_MOVEMENT_COMPENSATION
 
 class GazeTracker:
     def __init__(self):
         self.gaze_offset_max = GAZE_OFFSET_MAX
+        self.prev_face_center = None  # Сохраняем предыдущее положение лица для компенсации
         
         # Используем FaceLandmarker из новой версии MediaPipe
         # Для локальной загрузки модели укажем путь к файлу
@@ -45,26 +46,16 @@ class GazeTracker:
         right_eye = landmarks[473]  # приближенная точка правого глаза
 
         # Центр лица: используем более стабильные точки
-        # Среднее между центрами глаз как более надежный индикатор центра лица
+        # Средняя точка между глазами (медиана глаз)
         left_eye_inner = landmarks[468]  # внутренняя точка левого глаза
         right_eye_inner = landmarks[473]  # внутренняя точка правого глаза
         
         # Дополнительно используем точку между глазами и носом для более точного центра
         nose_bridge = landmarks[6]  # переносица
         
-        # Более точный центр лица: усреднение между глазами и переносицей
-        # Это дает более центральное положение на лице, чем среднее между носом и подбородком
-        face_center_x = (left_eye_inner.x + right_eye_inner.x + nose_bridge.x) / 3
-        face_center_y = (left_eye_inner.y + right_eye_inner.y + nose_bridge.y) / 3
-        
-        # Также можем использовать дополнительные точки для улучшения точности
-        # Средняя точка между глазами (медиана глаз)
-        eyes_center_x = (left_eye_inner.x + right_eye_inner.x) / 2
-        eyes_center_y = (left_eye_inner.y + right_eye_inner.y) / 2
-        
         # Используем взвешенное среднее для более точного центра лица
-        face_center_x = 0.4 * eyes_center_x + 0.6 * nose_bridge.x
-        face_center_y = 0.4 * eyes_center_y + 0.6 * nose_bridge.y
+        face_center_x = 0.4 * (left_eye_inner.x + right_eye_inner.x) / 2 + 0.6 * nose_bridge.x
+        face_center_y = 0.4 * (left_eye_inner.y + right_eye_inner.y) / 2 + 0.6 * nose_bridge.y
 
         # Относительное положение глаз от центра лица
         left_gx = left_eye.x - face_center_x
@@ -78,11 +69,27 @@ class GazeTracker:
         # Нормализация в [0, 1] (эмпирический диапазон)
         max_offset = self.gaze_offset_max
 
+        # Вычисляем базовую точку взгляда
         normalized_gx = 0.5 + rel_gx / (2 * max_offset)
         normalized_gy = 0.5 + rel_gy / (2 * max_offset)
 
+        # Компенсация движения головы/лица
+        if self.prev_face_center is not None:
+            # Вычисляем смещение центра лица относительно предыдущего кадра
+            face_dx = face_center_x - self.prev_face_center[0]
+            face_dy = face_center_y - self.prev_face_center[1]
+            
+            # Применяем компенсацию к точке взгляда (обратное смещение)
+            # Коэффициент компенсации может быть настроен для оптимизации
+            compensation_factor = HEAD_MOVEMENT_COMPENSATION  # Коэффициент компенсации движения головы из настроек
+            normalized_gx -= compensation_factor * face_dx
+            normalized_gy -= compensation_factor * face_dy
+
         normalized_gx = np.clip(normalized_gx, 0.0, 1.0)
         normalized_gy = np.clip(normalized_gy, 0.0, 1.0)
+
+        # Сохраняем текущее положение центра лица для следующего кадра
+        self.prev_face_center = (face_center_x, face_center_y)
 
         return (float(normalized_gx), float(normalized_gy)), (face_center_x, face_center_y)
 

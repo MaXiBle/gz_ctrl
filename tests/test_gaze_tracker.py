@@ -104,6 +104,8 @@ class TestGazeTracker(unittest.TestCase):
         """Тест: инициализация с параметрами из настроек"""
         # Проверяем, что gaze_offset_max установлен правильно
         self.assertEqual(self.tracker.gaze_offset_max, 0.06)
+        # Проверяем, что prev_face_center инициализирован как None
+        self.assertIsNone(self.tracker.prev_face_center)
 
     def tearDown(self):
         # Останавливаем все патчеры
