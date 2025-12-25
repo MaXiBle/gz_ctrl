@@ -10,9 +10,9 @@ class GazeTracker:
         self.gaze_offset_max = GAZE_OFFSET_MAX
         
         # Используем FaceLandmarker из новой версии MediaPipe
-        # Для автоматической загрузки модели укажем соответствующий путь
+        # Для локальной загрузки модели укажем путь к файлу
         base_options = mp.tasks.BaseOptions(
-            model_asset_path=None  # Автоматическая загрузка модели
+            model_asset_path="./models/face_landmarker.task"
         )
         options = mp.tasks.vision.FaceLandmarkerOptions(
             base_options=base_options,
