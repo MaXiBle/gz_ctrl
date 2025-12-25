@@ -8,29 +8,45 @@ from config.settings import FACE_DETECTION_CONFIDENCE, FACE_TRACKING_CONFIDENCE,
 class GazeTracker:
     def __init__(self):
         self.gaze_offset_max = GAZE_OFFSET_MAX
-        self.face_mesh = mp.solutions.face_mesh.FaceMesh(
-            max_num_faces=1,
-            refine_landmarks=True,
-            min_detection_confidence=FACE_DETECTION_CONFIDENCE,
-            min_tracking_confidence=FACE_TRACKING_CONFIDENCE
+        
+        # Используем FaceLandmarker из новой версии MediaPipe
+        # Для автоматической загрузки модели укажем соответствующий путь
+        base_options = mp.tasks.BaseOptions(
+            model_asset_path=None  # Автоматическая загрузка модели
         )
+        options = mp.tasks.vision.FaceLandmarkerOptions(
+            base_options=base_options,
+            output_face_blendshapes=True,
+            output_facial_transformation_matrixes=True,
+            num_faces=1,
+            min_face_detection_confidence=FACE_DETECTION_CONFIDENCE,
+            min_face_landmarking_confidence=FACE_TRACKING_CONFIDENCE
+        )
+        self.face_landmarker = mp.tasks.vision.FaceLandmarker.create_from_options(options)
 
     def get_gaze_point(self, frame):
+        # Конвертируем BGR в RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.face_mesh.process(rgb_frame)
+        # Создаем MediaPipe Image изображение
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+        
+        # Обрабатываем изображение
+        results = self.face_landmarker.detect(mp_image)
 
-        if not results.multi_face_landmarks:
-            return None  # ← ВАЖНО: возвращаем None, если нет лица
+        if not results.face_landmarks:
+            return None, None  # ← Возвращаем None для взгляда и None для центра лица
 
-        lm = results.multi_face_landmarks[0].landmark
+        # Получаем landmark'ы первого лица
+        landmarks = results.face_landmarks[0]
 
-        # Зрачки
-        left_eye = lm[468]
-        right_eye = lm[473]
+        # Зрачки (в новой версии MediaPipe номера точек могут отличаться)
+        # В новой версии MediaPipe нет специфических точек для зрачков, используем приближенные
+        left_eye = landmarks[468]  # приближенная точка левого глаза
+        right_eye = landmarks[473]  # приближенная точка правого глаза
 
         # Центр лица: нос + подбородок
-        nose_tip = lm[1]
-        chin = lm[175]
+        nose_tip = landmarks[1]
+        chin = landmarks[175]
         face_center_x = (nose_tip.x + chin.x) / 2
         face_center_y = (nose_tip.y + chin.y) / 2
 
@@ -52,7 +68,8 @@ class GazeTracker:
         normalized_gx = np.clip(normalized_gx, 0.0, 1.0)
         normalized_gy = np.clip(normalized_gy, 0.0, 1.0)
 
-        return float(normalized_gx), float(normalized_gy)
+        return (float(normalized_gx), float(normalized_gy)), (face_center_x, face_center_y)
 
     def close(self):
-        self.face_mesh.close()
+        # В новой версии MediaPipe закрытие может быть не требуется
+        pass

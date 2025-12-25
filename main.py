@@ -32,16 +32,17 @@ def main():
         if frame is None:
             break
 
-        gaze = gaze_tracker.get_gaze_point(frame)
-        if gaze:
+        gaze, face_center = gaze_tracker.get_gaze_point(frame)
+        if gaze and face_center:
             gx, gy = gaze
+            fcx, fcy = face_center  # координаты центра лица
             screen_x, screen_y = mapper.map_to_screen(gx, gy)
             mouse_controller.update_cursor(screen_x, screen_y)
             mouse_controller.handle_dwell_click(gx, gy)
 
-            # Отладка
+            # Отладка: точка в центре лица (зеленая)
             h, w = frame.shape[:2]
-            cv2.circle(frame, (int(gx * w), int(gy * h)), 3, (0, 255, 0), -1)
+            cv2.circle(frame, (int(fcx * w), int(fcy * h)), 3, (0, 255, 0), -1)
 
         cv2.imshow("Gaze Control — нажмите 'q'", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
